@@ -47,6 +47,44 @@ class TestLoginGate(unittest.TestCase):
         gate2.set(1, 0)
         self.assertEqual(1, gate4.operate())
 
+    def test_raise_not_enough_inputs(self):
+        gate1 = AndGate('A')
+        gate1.set_next(1)
+        try:
+            gate1.operate()
+        except Exception as e:
+            print(e)
+        else:
+            self.assertTrue(False, msg="exception should happen")
+
+        gate2 = NotGate('B')
+        try:
+            gate1.operate()
+        except Exception as e:
+            print(e)
+        else:
+            self.assertTrue(False, msg="exception should happen")
+
+    def test_raise_not_available_spot(self):
+        gate1 = AndGate('A')
+        gate1.set_next(1)
+        gate1.set_next(0)
+        try:
+            gate1.set_next(0)
+        except Exception as e:
+            print(e)
+        else:
+            self.assertTrue(False, msg="exception should happen")
+
+        gate2 = NotGate('B')
+        gate2.set_next(1)
+        try:
+            gate2.set_next(1)
+        except Exception as e:
+            print(e)
+        else:
+            self.assertTrue(False, msg="exception should happen")
+
 
 class TestConnector(unittest.TestCase):
     def test_connector(self):

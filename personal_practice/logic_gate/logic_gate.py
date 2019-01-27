@@ -7,82 +7,80 @@ class LogicGate(object):
         raise NotImplementedError("operate method should be implemented")
 
 
+    def set_next(self, a):
+        for i, value in enumerate(self._inputs):
+            if value is None:
+                self._inputs[i] = a
+                return
+
+        self._raise_not_available_spot()
+
+
+    def _raise_not_available_spot(self):
+        raise Exception("not available conneciton spot for logic gate '%s'" % (self._label))
+
+    def _raise_not_enough_inputs(self):
+        raise Exception(
+            "%d binary values or logic gate should be set for logic gate '%s'" % (self.num_of_input, self._label)
+        )
+
 class BinaryGate(LogicGate):
+    num_of_input = 2
+
     def __init__(self, label):
         super(BinaryGate, self).__init__(label)
-        self._a = None
-        self._b = None
+        self._inputs = [None, None]
+
 
     def set(self, a, b):
-        self._a = a
-        self._b = b
+        self._inputs = [a, b]
 
-    def set_next(self, a):
-        if self._a == None:
-            self._a = a
-        elif self._b == None:
-            self._b = a
-        else:
-            raise Exception("not available conneciton spot")
+    def _get_inputs(self):
+        result = []
+        for value in self._inputs:
+            if value is None:
+                self._raise_not_enough_inputs()
 
-
-    def _get_a(self):
-        if self._a is not None:
-            if hasattr(self._a, 'operate'):
-                return self._a.operate()
+            if hasattr(value, 'operate'):
+                result.append(value.operate())
             else:
-                return self._a 
-        else:
-            raise Exception("two binary values or logic gate should be set")
+                result.append(value)
 
-    def _get_b(self):
-        if self._b is not None:
-            if hasattr(self._b, 'operate'):
-                return self._b.operate()
-            else:
-                return self._b
-        else:
-            raise Exception("two binary values or logic gate should be set")
+        return tuple(result)
 
 
 class UnaryGate(LogicGate):
+    num_of_input = 1
     def __init__(self, label):
         super(UnaryGate, self).__init__(label)
-        self._a = None
+        self._inputs = [None]
 
     def set(self, a):
-        self._a = a
-
-    def set_next(self, a):
-        if self._a == None:
-            self._a = a
-        else:
-            raise Exception("not available conneciton spot")
+        self._inputs = [a]
 
 
 class AndGate(BinaryGate):
     def operate(self):
-        a = self._get_a()
-        b = self._get_b()
+        a, b = self._get_inputs()
         return a & b
 
 
 class OrGate(BinaryGate):
     def operate(self):
-        a = self._get_a()
-        b = self._get_b()
+        a, b = self._get_inputs()
         return a | b
 
 
 class NotGate(UnaryGate):
     def operate(self):
-        if self._a is None:
-            raise Exception("one binary value should be set for NotGate")
+        value = self._inputs[0]
+        if value is None:
+            self._raise_not_enough_inputs()
 
-        if hasattr(self._a, 'operate'):
-            a = self._a.operate()
+        if hasattr(value, 'operate'):
+            a = value.operate()
         else:
-            a = self._a
+            a = value
 
         if a == 0:
             return 1
@@ -98,8 +96,3 @@ class Connector(object):
             to.set_next(fr)
         except Exception as e:
             raise
-
-
-
-
-
