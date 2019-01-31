@@ -51,9 +51,25 @@ class TreeNode(Sequence):
             raise IndexError('Index out of range')
         return found.value
 
-
     def __len__(self):
-        return 1 # 0을 리턴할 시, if에 이 객체를 넣으면 False로 인식한다....
+        return self._length()
+
+    def _length(self):
+        self._len = 0
+        self._count()
+        return self._len
+
+    def _count(self):
+        self._traverse(self)
+
+    def _traverse(self, node):
+        self._len += 1
+        if node.left is not None:
+            self._traverse(node.left)
+        if node.right is not None:
+            self._traverse(node.right)
+
+    
 
 
 if __name__ == "__main__":
@@ -87,4 +103,5 @@ if __name__ == "__main__":
         print('node is none')
 
     found = node[8]
-    print(found.value)
+    print(found)
+    print(len(node))
