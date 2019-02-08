@@ -1,4 +1,3 @@
-
 class Meta(type):
     @classmethod
     def __prepare__(mcs, name, bases, **kwargs):
@@ -7,11 +6,13 @@ class Meta(type):
         ))
         return {}
 
+
     def __new__(mcs, name, bases, attrs, **kwargs):
         print('  Meta.__new__(mcs=%s, name=%r, bases=%s, attrs=[%s], **%s)' % (
             mcs, name, bases, ', '.join(attrs), kwargs
         ))
         return super().__new__(mcs, name, bases, attrs)
+
 
     def __init__(cls, name, bases, attrs, **kwargs):
         print('  Meta.__init__(cls=%s, name=%r, bases=%s, attrs=[%s], **%s)' % (
@@ -26,6 +27,7 @@ class Meta(type):
         ))
         return super().__call__(*args, **kwargs)
 
+print("--------- class creattion -------")
 
 class Class(metaclass=Meta, extra=1):
     def __new__(cls, myarg):
@@ -45,6 +47,7 @@ class Class(metaclass=Meta, extra=1):
         return "<instance of Class; myargs=%s>" % (
             getattr(self, 'myarg', 'MISSING'),
         )
+
 
 class SingletonMetaclass(type):
     _registered = {}
