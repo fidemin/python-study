@@ -26,10 +26,15 @@ class Class(object):
 
     def __getattribute__(self, attr):
         print('-- get attribute called --')
-        return super().__getattribute__(attr)
+
+        value = super().__getattribute__(attr)
+        # AttributeError 발생 시 아래 문구는 인쇄돼지 않을 것이다.
+        print('-- super get attribute called --')
+        return value
 
     def __getattr__(self, attr):
-        return '%s from __getattr__' % attr
+        print('%s from __getattr__' % attr)
+        return attr
 
 
 if __name__ == "__main__":
