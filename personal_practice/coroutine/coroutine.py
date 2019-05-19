@@ -4,7 +4,7 @@ def coroutine(func):
     @wraps(func)
     def wrap(*args, **kwargs):
         cr = func(*args, **kwargs)
-        cr.next()
+        next(cr)
         return cr
     return wrap
 
@@ -13,11 +13,11 @@ def coroutine(func):
 def printer():
     while True:
         value = yield
-        print(value)
+        print(value, end="")
 
 if __name__ == "__main__":
     prn = printer()
-    prn.send("what?")
-    prn.send("what??")
+    prn.send("what?\n")
+    prn.send("what??\n")
 
 
