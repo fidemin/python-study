@@ -39,6 +39,7 @@ class EventLoop(object):
 
     def resume_task(self, coroutine, value=None, stack=()):
         result = coroutine.send(value)
+        print(coroutine, result, stack)
 
         if isinstance(result, types.GeneratorType):
             self.schedule(result, None, (coroutine, stack))
@@ -47,6 +48,7 @@ class EventLoop(object):
         elif result is sys.stdin:
             self._tasks_waiting_on_stdin.append((coroutine, stack))
         elif stack:
+            # result가 숫자가 나온 경우
             self.schedule(stack[0], result, stack[1])
 
     def schedule(self, coroutine, value=None, stack=(), when=None):
