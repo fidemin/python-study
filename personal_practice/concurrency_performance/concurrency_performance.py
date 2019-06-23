@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-#import gevent.monkey
-#gevent.monkey.patch_all()
+import gevent.monkey
+gevent.monkey.patch_all()
 
 import asyncio
 import requests
@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 def send_request(url): 
     #print('start {}'.format(url))
     response = requests.get(url)
-    #time.sleep(1)
+    #time.sleep(2)
     #print('end {}'.format(url))
     #return url
     return response.text
@@ -21,7 +21,7 @@ async def send_requests_async(loop, urls):
     '''
     https://stackoverflow.com/questions/22190403/how-could-i-use-requests-in-asyncio/47572164
     run_in_executor는 실제로는 ThreadPoolExecutor를 사용한다.
-    복잡한 처리는 asyncio가 해주기 때문에 속도가 빠르다.
+    그러나 복잡한 처리는 asyncio가 해주기 때문에 속도가 빠르다.
     '''
     #print('future start')
     futures = []
@@ -37,8 +37,9 @@ async def send_requests_async(loop, urls):
 
 def run_in_async(urls):
     # BEST PERFORMANCE AND MEMORY USE
-    # 실제로는 별도의 thread를 만들어 실행되는데도 성능이 가장 좋음
+    # 내부적으로는 ThreadPoolExecutor로 실행되는데도 성능은 좋은 편임
     # asyncio에서 async적으로 복잡한 처리를 해주기 때문인듯
+    # 메모리 상용량은 run_in_thread_pool 보다 작음
     loop = asyncio.get_event_loop()
     results = loop.run_until_complete(send_requests_async(loop, urls))
     loop.close()
@@ -66,7 +67,7 @@ def run_in_sync(urls):
 def run_in_gevent(urls):
     # monkey patch를 한경우 전체 사용 메모리 양이 조금 늘어남. 
     #(기본적으로 main thread에 필요한 메모리양인듯)
-    # 성능은 run_in_async보다 높게는 안나옴
+    # 성능은 run_in_async보다 높다고 볼 수도 없다.
 
     threads = []
     for url in urls:
@@ -95,19 +96,19 @@ if __name__ == '__main__':
     for result in results:
         print(len(result))
 
+    '''
     start = time.time()
     results = run_in_thread_pool(urls)
     end = time.time()
     print('ThreadPoolExecutor time spend {}s'.format(end - start))
     for result in results:
         print(len(result))
-
-
     '''
+
+
     start = time.time()
     results = run_in_gevent(urls)
     end = time.time()
     print('gevent time spend {}s'.format(end - start))
     for result in results:
         print(len(result))
-    '''
