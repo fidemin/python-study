@@ -3,17 +3,17 @@ import sys
 from time import time
 from util import timed_fib
 
+
 def process_input():
     text = sys.stdin.readline()
     n = int(text)
     print('fib({}) = {}'.format(n, timed_fib(n)))
 
 
-@asyncio.coroutine
-def print_hello():
+async def print_hello():
     while True:
-         print("{} - Hello world!".format(int(time())))
-         yield from asyncio.sleep(3)
+        print("{} - Hello world!".format(int(time())))
+        await asyncio.sleep(3)
 
 
 if __name__ == "__main__":
