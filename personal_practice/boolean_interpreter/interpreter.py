@@ -44,8 +44,8 @@ class BooleanInterpreter:
         self._data = data
         self._operations = operations
 
-    def _operate(self, node_dict, key):
-        node = node_dict[key]
+    def _operate(self, node_dict: dict[str, Node], start_key):
+        node = node_dict[start_key]
         if node.is_leaf:
             return node.data
 
@@ -86,7 +86,7 @@ class BooleanInterpreter:
     def expr(self):
         indegree = self._calculate_indegree()
 
-        node_dict = self._set_node_dict()
+        node_dict: dict[str, Node] = self._set_node_dict()
 
         start_key = get_key_with_zero_indegree(indegree)
 

@@ -1,9 +1,8 @@
 from collections import defaultdict
-from unittest import TestCase
 
 import pytest
 
-from personal_practice.boolean_interpreter.interpreter import (
+from .interpreter import (
     get_key_with_zero_indegree,
     BooleanInterpreter,
 )
