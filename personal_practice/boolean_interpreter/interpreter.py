@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 
 def get_key_with_zero_indegree(indegree: dict[int]):
@@ -58,7 +59,7 @@ class BooleanInterpreter:
         else:
             raise ValueError("Invalid operation")
 
-    def _calculate_indegree(self):
+    def _calculate_indegree(self) -> dict[str, int]:
         indegree = defaultdict(int)
 
         for d in self._data:
@@ -91,3 +92,26 @@ class BooleanInterpreter:
         start_key = get_key_with_zero_indegree(indegree)
 
         return self._operate(node_dict, start_key)
+
+    def _build_operation_tree(self, node_dict: dict[str, Node], start_key):
+        node = node_dict[start_key]
+        if node.is_leaf:
+            copied_node_data = deepcopy(node.data)
+            return {"data": copied_node_data}
+
+        values = [
+            self._build_operation_tree(node_dict, child) for child in node.children
+        ]
+        return {
+            "op_targets": values,
+            "op": node.operation,
+        }
+
+    def build_operation_tree(self):
+        indegree = self._calculate_indegree()
+
+        node_dict: dict[str, Node] = self._set_node_dict()
+
+        start_key = get_key_with_zero_indegree(indegree)
+
+        return self._build_operation_tree(node_dict, start_key)
