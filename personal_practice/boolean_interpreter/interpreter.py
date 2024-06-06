@@ -1,6 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
-from typing import Optional
+from typing import Optional, List
 
 
 def get_key_with_zero_indegree(indegree: dict[str, int]):
@@ -45,20 +45,21 @@ class Node:
 
 class BooleanInterpreter:
     def __init__(self, data):
-        self._data = data
-        self._sorted_nodes = []
+        self._data: dict = data
+        self._sorted_keys: List[str] = []
         self._indegree: Optional[dict[str, int]] = None
         self._node_dict: Optional[dict[str, Node]] = None
         self._start_key: Optional[str] = None
+        self._result_cache: dict[str, List[str]] = {}
         self._setup()
 
     def expr(self):
-        return self._operate(self._node_dict, self._start_key)
+        return self._operate()
 
     def build_operation_tree(self):
         return self._build_operation_tree(self._node_dict, self._start_key)
 
-    def build_topological_sort(self):
+    def build_sorted_keys(self):
         return self._topological_sort(self._indegree, self._node_dict, self._start_key)
 
     def _setup(self):
@@ -67,19 +68,24 @@ class BooleanInterpreter:
         if self._start_key is None:
             self._start_key = get_key_with_zero_indegree(self._indegree)
 
-    def _operate(self, node_dict: dict[str, Node], start_key):
-        node = node_dict[start_key]
-        if node.is_leaf:
-            return node.data
+    def _operate(self):
+        if not self._sorted_keys:
+            self.build_sorted_keys()
 
-        values = [set(self._operate(node_dict, child)) for child in node.children]
+        for key in self._sorted_keys:
+            node = self._node_dict[key]
+            if node.is_leaf:
+                self._result_cache[key] = node.data
+            else:
+                values = [set(self._result_cache[child]) for child in node.children]
+                if node.operation == "AND":
+                    self._result_cache[key] = list(set.intersection(*values))
+                elif node.operation == "OR":
+                    self._result_cache[key] = list(set.union(*values))
+                else:
+                    raise ValueError("Invalid operation")
 
-        if node.operation == "AND":
-            return list(set.intersection(*values))
-        elif node.operation == "OR":
-            return list(set.union(*values))
-        else:
-            raise ValueError("Invalid operation")
+        return self._result_cache[self._start_key]
 
     def _build_operation_tree(self, node_dict: dict[str, Node], start_key):
         node = node_dict[start_key]
@@ -139,7 +145,7 @@ class BooleanInterpreter:
         indegree = deepcopy(indegree)
         while queue:
             key = queue.pop(0)
-            self._sorted_nodes.append(key)
+            self._sorted_keys.append(key)
 
             for child in node_dict[key].children:
                 indegree[child] -= 1
@@ -149,5 +155,5 @@ class BooleanInterpreter:
         for count in indegree.values():
             if count != 0:
                 raise ValueError("Wrong indegree or Cycle detected")
-        self._sorted_nodes.reverse()
-        return self._sorted_nodes
+        self._sorted_keys.reverse()
+        return self._sorted_keys

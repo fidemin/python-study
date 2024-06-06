@@ -128,10 +128,10 @@ class TestBooleanInterpreter:
         actual = set(interpreter.expr())
         assert actual == expected
 
-    def test_build_topological_sort(self, data_for_expr):
+    def test_build_sorted_keys(self, data_for_expr):
         test_input_data, _ = data_for_expr
         interpreter = BooleanInterpreter(test_input_data)
-        actual = interpreter.build_topological_sort()
+        actual = interpreter.build_sorted_keys()
         assert len(actual) == len(test_input_data)
         assert_topological_sort(test_input_data, actual)
 
