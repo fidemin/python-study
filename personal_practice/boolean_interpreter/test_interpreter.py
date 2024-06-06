@@ -8,102 +8,113 @@ from .interpreter import (
     BooleanInterpreter,
 )
 
+common_test_dataset = [
+    [{"key": "A", "operation": None, "data": ["a", "b", "c"]}],
+    [
+        {"key": "A", "operation": None, "data": ["a", "b", "c"]},
+        {"key": "B", "operation": None, "data": ["c", "d", "e"]},
+        {"key": "C", "operation": None, "data": ["d", "k"]},
+        {
+            "key": "AB_AND",
+            "operation": {"type": "AND", "targets": ["A", "B"]},
+            "data": None,
+        },
+        {
+            "key": "ABC",
+            "operation": {"type": "OR", "targets": ["AB_AND", "C"]},
+            "data": None,
+        },
+    ],
+    [
+        {"key": "A", "operation": None, "data": ["a", "b", "c"]},
+        {"key": "B", "operation": None, "data": ["c", "d", "e"]},
+        {"key": "C", "operation": None, "data": ["d", "k"]},
+        {
+            "key": "AB_AND",
+            "operation": {"type": "AND", "targets": ["A", "B"]},
+            "data": None,
+        },
+        {
+            "key": "BC_AND",
+            "operation": {"type": "AND", "targets": ["B", "C"]},
+            "data": None,
+        },
+        {
+            "key": "ABC",
+            "operation": {"type": "OR", "targets": ["AB_AND", "BC_AND"]},
+            "data": None,
+        },
+    ],
+]
 
-@pytest.fixture(
-    params=[
-        (
-            [{"key": "A", "operation": None, "data": ["a", "b", "c"]}],
-            {"a", "b", "c"},
-            {"data": ["a", "b", "c"]},
-        ),
-        (
-            [
-                {"key": "A", "operation": None, "data": ["a", "b", "c"]},
-                {"key": "B", "operation": None, "data": ["c", "d", "e"]},
-                {"key": "C", "operation": None, "data": ["d", "k"]},
-                {
-                    "key": "AB_AND",
-                    "operation": {"type": "AND", "targets": ["A", "B"]},
-                    "data": None,
-                },
-                {
-                    "key": "ABC",
-                    "operation": {"type": "OR", "targets": ["AB_AND", "C"]},
-                    "data": None,
-                },
-            ],
-            {"c", "d", "k"},
+expected_for_expr = [
+    {"a", "b", "c"},
+    {"c", "d", "k"},
+    {"c", "d"},
+]
+
+expected_for_build_operation_tree = [
+    {
+        "data": ["a", "b", "c"],
+    },
+    {
+        "op": "OR",
+        "op_targets": [
             {
-                "op": "OR",
+                "op": "AND",
                 "op_targets": [
-                    {
-                        "op": "AND",
-                        "op_targets": [
-                            {"data": ["a", "b", "c"]},
-                            {"data": ["c", "d", "e"]},
-                        ],
-                    },
+                    {"data": ["a", "b", "c"]},
+                    {"data": ["c", "d", "e"]},
+                ],
+            },
+            {"data": ["d", "k"]},
+        ],
+    },
+    {
+        "op": "OR",
+        "op_targets": [
+            {
+                "op": "AND",
+                "op_targets": [
+                    {"data": ["a", "b", "c"]},
+                    {"data": ["c", "d", "e"]},
+                ],
+            },
+            {
+                "op": "AND",
+                "op_targets": [
+                    {"data": ["c", "d", "e"]},
                     {"data": ["d", "k"]},
                 ],
             },
-        ),
-        (
-            [
-                {"key": "A", "operation": None, "data": ["a", "b", "c"]},
-                {"key": "B", "operation": None, "data": ["c", "d", "e"]},
-                {"key": "C", "operation": None, "data": ["d", "k"]},
-                {
-                    "key": "AB_AND",
-                    "operation": {"type": "AND", "targets": ["A", "B"]},
-                    "data": None,
-                },
-                {
-                    "key": "BC_AND",
-                    "operation": {"type": "AND", "targets": ["B", "C"]},
-                    "data": None,
-                },
-                {
-                    "key": "ABC",
-                    "operation": {"type": "OR", "targets": ["AB_AND", "BC_AND"]},
-                    "data": None,
-                },
-            ],
-            {"c", "d"},
-            {
-                "op": "OR",
-                "op_targets": [
-                    {
-                        "op": "AND",
-                        "op_targets": [
-                            {"data": ["a", "b", "c"]},
-                            {"data": ["c", "d", "e"]},
-                        ],
-                    },
-                    {
-                        "op": "AND",
-                        "op_targets": [
-                            {"data": ["c", "d", "e"]},
-                            {"data": ["d", "k"]},
-                        ],
-                    },
-                ],
-            },
-        ),
+        ],
+    },
+]
+
+
+@pytest.fixture(params=[(x, y) for x, y in zip(common_test_dataset, expected_for_expr)])
+def data_for_expr(request):
+    return request.param
+
+
+@pytest.fixture(
+    params=[
+        (x, y) for x, y in zip(common_test_dataset, expected_for_build_operation_tree)
     ]
 )
-def data_for_boolean_interpreter(request):
+def data_for_build_operation_tree(request):
     return request.param
 
 
 class TestBooleanInterpreter:
-    def test_build_operation_tree(self, data_for_boolean_interpreter):
-        test_input_data, _, expected = data_for_boolean_interpreter
+    def test_build_operation_tree(self, data_for_build_operation_tree):
+        test_input_data, expected = data_for_build_operation_tree
         interpreter = BooleanInterpreter(test_input_data)
         actual = interpreter.build_operation_tree()
         assert actual == expected
 
-    def test_expr(self, data_for_boolean_interpreter):
-        test_input_data, expected, _ = data_for_boolean_interpreter
+    def test_expr(self, data_for_expr):
+        test_input_data, expected = data_for_expr
         interpreter = BooleanInterpreter(test_input_data)
         actual = set(interpreter.expr())
         assert actual == expected

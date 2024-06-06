@@ -2,7 +2,7 @@ from collections import defaultdict
 from copy import deepcopy
 
 
-def get_key_with_zero_indegree(indegree: dict[int]):
+def get_key_with_zero_indegree(indegree: dict[str, int]):
     """
     Args:
         indegree: key is the node key and value is the indegree of the node
@@ -43,6 +43,7 @@ class Node:
 class BooleanInterpreter:
     def __init__(self, data):
         self._data = data
+        self._sorted_nodes = []
 
     def expr(self):
         node_dict, start_key = self._setup()
@@ -51,6 +52,12 @@ class BooleanInterpreter:
     def build_operation_tree(self):
         node_dict, start_key = self._setup()
         return self._build_operation_tree(node_dict, start_key)
+
+    def build_topological_sort(self):
+        indegree = self._calculate_indegree()
+        node_dict = self._set_node_dict()
+        start_key = get_key_with_zero_indegree(indegree)
+        self._topological_sort(node_dict, start_key)
 
     def _setup(self):
         indegree = self._calculate_indegree()
@@ -117,3 +124,14 @@ class BooleanInterpreter:
             node_dict[key] = Node(key, operation_targets, operation_type, data)
 
         return node_dict
+
+    def _topological_sort(self, node_dict, start_key):
+        node = node_dict[start_key]
+        if node.is_leaf:
+            self._sorted_nodes.append(node)
+            return
+
+        for child in node.children:
+            self._build_topological_order(node_dict, child)
+
+        self._sorted_nodes.append(node)
