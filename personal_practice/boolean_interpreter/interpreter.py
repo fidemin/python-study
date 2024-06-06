@@ -41,9 +41,22 @@ class Node:
 
 
 class BooleanInterpreter:
-    def __init__(self, data, operations):
+    def __init__(self, data):
         self._data = data
-        self._operations = operations
+
+    def expr(self):
+        node_dict, start_key = self._setup()
+        return self._operate(node_dict, start_key)
+
+    def build_operation_tree(self):
+        node_dict, start_key = self._setup()
+        return self._build_operation_tree(node_dict, start_key)
+
+    def _setup(self):
+        indegree = self._calculate_indegree()
+        node_dict: dict[str, Node] = self._set_node_dict()
+        start_key = get_key_with_zero_indegree(indegree)
+        return node_dict, start_key
 
     def _operate(self, node_dict: dict[str, Node], start_key):
         node = node_dict[start_key]
@@ -59,40 +72,6 @@ class BooleanInterpreter:
         else:
             raise ValueError("Invalid operation")
 
-    def _calculate_indegree(self) -> dict[str, int]:
-        indegree = defaultdict(int)
-
-        for d in self._data:
-            indegree[d["key"]] = 0
-
-        for operation in self._operations:
-            if operation["key"] not in indegree:
-                indegree[operation["key"]] = 0
-
-            for v in operation["op_targets"]:
-                indegree[v] += 1
-
-        return indegree
-
-    def _set_node_dict(self):
-        node_dict = {}
-        for d in self._data:
-            node_dict[d["key"]] = Node.from_data(d)
-
-        for operation in self._operations:
-            node_dict[operation["key"]] = Node.from_operation(operation)
-
-        return node_dict
-
-    def expr(self):
-        indegree = self._calculate_indegree()
-
-        node_dict: dict[str, Node] = self._set_node_dict()
-
-        start_key = get_key_with_zero_indegree(indegree)
-
-        return self._operate(node_dict, start_key)
-
     def _build_operation_tree(self, node_dict: dict[str, Node], start_key):
         node = node_dict[start_key]
         if node.is_leaf:
@@ -107,11 +86,34 @@ class BooleanInterpreter:
             "op": node.operation,
         }
 
-    def build_operation_tree(self):
-        indegree = self._calculate_indegree()
+    def _calculate_indegree(self) -> dict[str, int]:
+        indegree = defaultdict(int)
 
-        node_dict: dict[str, Node] = self._set_node_dict()
+        for d in self._data:
+            key = d["key"]
+            operation = d["operation"]
 
-        start_key = get_key_with_zero_indegree(indegree)
+            indegree[key] = 0
 
-        return self._build_operation_tree(node_dict, start_key)
+            if operation is not None:
+                for v in operation["targets"]:
+                    indegree[v] += 1
+
+        return indegree
+
+    def _set_node_dict(self):
+        node_dict = {}
+        for d in self._data:
+            key = d["key"]
+            operation = d["operation"]
+            operation_type = None
+            operation_targets = None
+            data = d["data"]
+
+            if operation is not None:
+                operation_type = operation["type"]
+                operation_targets = operation["targets"]
+
+            node_dict[key] = Node(key, operation_targets, operation_type, data)
+
+        return node_dict

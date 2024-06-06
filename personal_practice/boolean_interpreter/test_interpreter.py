@@ -12,20 +12,25 @@ from .interpreter import (
 @pytest.fixture(
     params=[
         (
-            [{"key": "A", "data": ["a", "b", "c"]}],
-            [],
+            [{"key": "A", "operation": None, "data": ["a", "b", "c"]}],
             {"a", "b", "c"},
             {"data": ["a", "b", "c"]},
         ),
         (
             [
-                {"key": "A", "data": ["a", "b", "c"]},
-                {"key": "B", "data": ["c", "d", "e"]},
-                {"key": "C", "data": ["d", "k"]},
-            ],
-            [
-                {"key": "AB_AND", "op": "AND", "op_targets": ["A", "B"]},
-                {"key": "ABC", "op": "OR", "op_targets": ["AB_AND", "C"]},
+                {"key": "A", "operation": None, "data": ["a", "b", "c"]},
+                {"key": "B", "operation": None, "data": ["c", "d", "e"]},
+                {"key": "C", "operation": None, "data": ["d", "k"]},
+                {
+                    "key": "AB_AND",
+                    "operation": {"type": "AND", "targets": ["A", "B"]},
+                    "data": None,
+                },
+                {
+                    "key": "ABC",
+                    "operation": {"type": "OR", "targets": ["AB_AND", "C"]},
+                    "data": None,
+                },
             ],
             {"c", "d", "k"},
             {
@@ -44,14 +49,24 @@ from .interpreter import (
         ),
         (
             [
-                {"key": "A", "data": ["a", "b", "c"]},
-                {"key": "B", "data": ["c", "d", "e"]},
-                {"key": "C", "data": ["d", "k"]},
-            ],
-            [
-                {"key": "AB_AND", "op": "AND", "op_targets": ["A", "B"]},
-                {"key": "BC_AND", "op": "AND", "op_targets": ["B", "C"]},
-                {"key": "ABC", "op": "OR", "op_targets": ["AB_AND", "BC_AND"]},
+                {"key": "A", "operation": None, "data": ["a", "b", "c"]},
+                {"key": "B", "operation": None, "data": ["c", "d", "e"]},
+                {"key": "C", "operation": None, "data": ["d", "k"]},
+                {
+                    "key": "AB_AND",
+                    "operation": {"type": "AND", "targets": ["A", "B"]},
+                    "data": None,
+                },
+                {
+                    "key": "BC_AND",
+                    "operation": {"type": "AND", "targets": ["B", "C"]},
+                    "data": None,
+                },
+                {
+                    "key": "ABC",
+                    "operation": {"type": "OR", "targets": ["AB_AND", "BC_AND"]},
+                    "data": None,
+                },
             ],
             {"c", "d"},
             {
@@ -81,21 +96,16 @@ def data_for_boolean_interpreter(request):
 
 
 class TestBooleanInterpreter:
-
-    def test_expr(self, data_for_boolean_interpreter):
-        test_input_data, test_input_operations, expected, _ = (
-            data_for_boolean_interpreter
-        )
-        interpreter = BooleanInterpreter(test_input_data, test_input_operations)
-        actual = set(interpreter.expr())
+    def test_build_operation_tree(self, data_for_boolean_interpreter):
+        test_input_data, _, expected = data_for_boolean_interpreter
+        interpreter = BooleanInterpreter(test_input_data)
+        actual = interpreter.build_operation_tree()
         assert actual == expected
 
-    def test_integrate_dict(self, data_for_boolean_interpreter):
-        test_input_data, test_input_operations, _, expected = (
-            data_for_boolean_interpreter
-        )
-        interpreter = BooleanInterpreter(test_input_data, test_input_operations)
-        actual = interpreter.build_operation_tree()
+    def test_expr(self, data_for_boolean_interpreter):
+        test_input_data, expected, _ = data_for_boolean_interpreter
+        interpreter = BooleanInterpreter(test_input_data)
+        actual = set(interpreter.expr())
         assert actual == expected
 
 
