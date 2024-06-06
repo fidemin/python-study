@@ -59,36 +59,46 @@ expected_for_build_operation_tree = [
         "data": ["a", "b", "c"],
     },
     {
-        "op": "OR",
-        "op_targets": [
-            {
-                "op": "AND",
-                "op_targets": [
-                    {"data": ["a", "b", "c"]},
-                    {"data": ["c", "d", "e"]},
-                ],
-            },
-            {"data": ["d", "k"]},
-        ],
+        "operation": {
+            "type": "OR",
+            "targets": [
+                {
+                    "operation": {
+                        "type": "AND",
+                        "targets": [
+                            {"data": ["a", "b", "c"]},
+                            {"data": ["c", "d", "e"]},
+                        ],
+                    }
+                },
+                {"data": ["d", "k"]},
+            ],
+        },
     },
     {
-        "op": "OR",
-        "op_targets": [
-            {
-                "op": "AND",
-                "op_targets": [
-                    {"data": ["a", "b", "c"]},
-                    {"data": ["c", "d", "e"]},
-                ],
-            },
-            {
-                "op": "AND",
-                "op_targets": [
-                    {"data": ["c", "d", "e"]},
-                    {"data": ["d", "k"]},
-                ],
-            },
-        ],
+        "operation": {
+            "type": "OR",
+            "targets": [
+                {
+                    "operation": {
+                        "type": "AND",
+                        "targets": [
+                            {"data": ["a", "b", "c"]},
+                            {"data": ["c", "d", "e"]},
+                        ],
+                    }
+                },
+                {
+                    "operation": {
+                        "type": "AND",
+                        "targets": [
+                            {"data": ["c", "d", "e"]},
+                            {"data": ["d", "k"]},
+                        ],
+                    }
+                },
+            ],
+        },
     },
 ]
 

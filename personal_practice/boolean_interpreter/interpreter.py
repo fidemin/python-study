@@ -96,10 +96,7 @@ class BooleanInterpreter:
         values = [
             self._build_operation_tree(node_dict, child) for child in node.children
         ]
-        return {
-            "op_targets": values,
-            "op": node.operation,
-        }
+        return {"operation": {"type": node.operation, "targets": values}}
 
     def _set_indegree(self):
         if self._indegree is not None:
