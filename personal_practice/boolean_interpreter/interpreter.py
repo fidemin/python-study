@@ -1,5 +1,6 @@
 from collections import defaultdict
 from copy import deepcopy
+from typing import Optional
 
 
 def get_key_with_zero_indegree(indegree: dict[str, int]):
@@ -44,26 +45,25 @@ class BooleanInterpreter:
     def __init__(self, data):
         self._data = data
         self._sorted_nodes = []
+        self._indegree: Optional[dict[str, int]] = None
+        self._node_dict: Optional[dict[str, Node]] = None
+        self._start_key: Optional[str] = None
+        self._setup()
 
     def expr(self):
-        node_dict, start_key = self._setup()
-        return self._operate(node_dict, start_key)
+        return self._operate(self._node_dict, self._start_key)
 
     def build_operation_tree(self):
-        node_dict, start_key = self._setup()
-        return self._build_operation_tree(node_dict, start_key)
+        return self._build_operation_tree(self._node_dict, self._start_key)
 
     def build_topological_sort(self):
-        indegree = self._calculate_indegree()
-        node_dict = self._set_node_dict()
-        start_key = get_key_with_zero_indegree(indegree)
-        self._topological_sort(node_dict, start_key)
+        self._topological_sort(self._node_dict, self._start_key)
 
     def _setup(self):
-        indegree = self._calculate_indegree()
-        node_dict: dict[str, Node] = self._set_node_dict()
-        start_key = get_key_with_zero_indegree(indegree)
-        return node_dict, start_key
+        self._set_indegree()
+        self._set_node_dict()
+        if self._start_key is None:
+            self._start_key = get_key_with_zero_indegree(self._indegree)
 
     def _operate(self, node_dict: dict[str, Node], start_key):
         node = node_dict[start_key]
@@ -93,7 +93,9 @@ class BooleanInterpreter:
             "op": node.operation,
         }
 
-    def _calculate_indegree(self) -> dict[str, int]:
+    def _set_indegree(self):
+        if self._indegree is not None:
+            return
         indegree = defaultdict(int)
 
         for d in self._data:
@@ -105,10 +107,12 @@ class BooleanInterpreter:
             if operation is not None:
                 for v in operation["targets"]:
                     indegree[v] += 1
-
-        return indegree
+        self._indegree = indegree
 
     def _set_node_dict(self):
+        if self._node_dict is not None:
+            return
+
         node_dict = {}
         for d in self._data:
             key = d["key"]
@@ -123,7 +127,7 @@ class BooleanInterpreter:
 
             node_dict[key] = Node(key, operation_targets, operation_type, data)
 
-        return node_dict
+        self._node_dict = node_dict
 
     def _topological_sort(self, node_dict, start_key):
         node = node_dict[start_key]
@@ -132,6 +136,6 @@ class BooleanInterpreter:
             return
 
         for child in node.children:
-            self._build_topological_order(node_dict, child)
+            self._topological_sort(node_dict, child)
 
         self._sorted_nodes.append(node)
