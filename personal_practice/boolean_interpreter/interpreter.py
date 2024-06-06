@@ -27,6 +27,8 @@ def get_key_with_zero_indegree(indegree: dict[str, int]):
 class Node:
     def __init__(self, key, children=None, operation=None, data=None):
         self.key = key
+        if children is None:
+            children = []
         self.children = children
         self.operation = operation
         self.data = data
@@ -57,7 +59,7 @@ class BooleanInterpreter:
         return self._build_operation_tree(self._node_dict, self._start_key)
 
     def build_topological_sort(self):
-        self._topological_sort(self._node_dict, self._start_key)
+        return self._topological_sort(self._indegree, self._node_dict, self._start_key)
 
     def _setup(self):
         self._set_indegree()
@@ -129,13 +131,23 @@ class BooleanInterpreter:
 
         self._node_dict = node_dict
 
-    def _topological_sort(self, node_dict, start_key):
-        node = node_dict[start_key]
-        if node.is_leaf:
-            self._sorted_nodes.append(node)
-            return
+    def _topological_sort(
+        self, indegree: dict[str, int], node_dict: dict[str, Node], start_key: str
+    ):
+        queue = [start_key]
+        # deepcopy indegree to avoid modifying the original indegree
+        indegree = deepcopy(indegree)
+        while queue:
+            key = queue.pop(0)
+            self._sorted_nodes.append(key)
 
-        for child in node.children:
-            self._topological_sort(node_dict, child)
+            for child in node_dict[key].children:
+                indegree[child] -= 1
+                if indegree[child] == 0:
+                    queue.append(child)
 
-        self._sorted_nodes.append(node)
+        for count in indegree.values():
+            if count != 0:
+                raise ValueError("Wrong indegree or Cycle detected")
+        self._sorted_nodes.reverse()
+        return self._sorted_nodes

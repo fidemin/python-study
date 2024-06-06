@@ -1,5 +1,6 @@
 from collections import defaultdict
 from contextlib import nullcontext
+from typing import List
 
 import pytest
 
@@ -106,6 +107,14 @@ def data_for_build_operation_tree(request):
     return request.param
 
 
+def assert_topological_sort(data: dict, sorted_keys: List[str]):
+    for d in data:
+        if d["operation"] is None:
+            continue
+        for target in d["operation"]["targets"]:
+            assert sorted_keys.index(target) < sorted_keys.index(d["key"])
+
+
 class TestBooleanInterpreter:
     def test_build_operation_tree(self, data_for_build_operation_tree):
         test_input_data, expected = data_for_build_operation_tree
@@ -118,6 +127,13 @@ class TestBooleanInterpreter:
         interpreter = BooleanInterpreter(test_input_data)
         actual = set(interpreter.expr())
         assert actual == expected
+
+    def test_build_topological_sort(self, data_for_expr):
+        test_input_data, _ = data_for_expr
+        interpreter = BooleanInterpreter(test_input_data)
+        actual = interpreter.build_topological_sort()
+        assert len(actual) == len(test_input_data)
+        assert_topological_sort(test_input_data, actual)
 
 
 @pytest.mark.parametrize(
