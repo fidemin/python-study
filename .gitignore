@@ -162,3 +162,5 @@ cython_debug/
 # pyenv virtualenv file
 .python-version
 
+# images
+*.png
