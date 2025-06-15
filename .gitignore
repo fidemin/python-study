@@ -164,3 +164,7 @@ cython_debug/
 
 # images
 *.png
+
+# temp
+temp-*
+temp_*
